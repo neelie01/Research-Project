@@ -35,6 +35,7 @@ def get_target_id(
 def read_top_down_data(input_file):
     data = pd.read_csv(input_file, sep="\t")
     data['Label'] = (data['ProteinAccession'].str.contains("DECOY")==False).astype(float)
+    data['Score'] = data['Score'].astype(float) + data['TagCount'].astype(float)/100.0
     return data
 
 def rerank_helper(x, score_col, new_rank_col):
@@ -45,11 +46,12 @@ def rerank_helper(x, score_col, new_rank_col):
 def rerank(df, group_col, score_col, new_rank_col):
     # rerank PSMs
     df = df.groupby(group_col)\
-        .apply(
-            lambda x: rerank_helper(x, score_col, new_rank_col)
-        )
+        .apply(lambda x: rerank_helper(x, score_col, new_rank_col))
     df.index = df.index.droplevel(group_col)
     return df
+
+def get_top_indices(df, group_col, score_col):
+    return df.groupby(group_col)[score_col].idxmax()
 
 def get_datasets():
     datasets = {1: {'type': 'crosslink_data',
@@ -57,29 +59,34 @@ def get_datasets():
                     'file_ending': '.idXML',
                     'name':'AChernev_080219',
                     'group': 'NuXL:isXL',
+                    'bool_filter': True,
                     'comparison':'opti_'},
                 2: {'type': 'crosslink_data',
                     'file':'M_Raabe_A_Wulf_220421_270421_Expl3_Ecoli_XL_UV_S30_LB_bRPfrac_11',
                     'file_ending': '.idXML',
                     'name':'M_Raabe_A_Wulf_220421_270421',
                     'group': 'NuXL:isXL',
+                    'bool_filter': True,
                     'comparison':'perc'},
                 3: {'type': 'crosslink_data',
                     'file':'M_Raabe_A_Wulf_220421_290421_Expl3_Ecoli_XL_DEB_S30_LB_bRPfrac_12',
                     'file_ending': '.idXML',
                     'name':'M_Raabe_A_Wulf_220421_290421',
                     'group': 'NuXL:isXL',
+                    'bool_filter': True,
                     'comparison':'perc'},
                 4: {'type': 'crosslink_data',
                     'file':'MRaabe_LW_091221_171221_Expl2_XL_Ecoli_NM_S30_bRP_rep1_11',
                     'file_ending': '.idXML',
                     'name':'MRaabe_LW_091221_171221',
                     'group': 'NuXL:isXL',
+                    'bool_filter': True,
                     'comparison':'perc'},
                 5: {'type': 'top_down_data',
                     'file':'outprsm4_multihits',
                     'file_ending': '.tsv',
                     'name':'outpsrm4',
                     'group': 'ModCount',
+                    'bool_filter': True,
                     'comparison': None}}
     return datasets

@@ -1,6 +1,7 @@
 import pandas as pd
 from pyopenms import *
 from typing import Tuple, Dict
+import numpy as np
 
 # convert every string col into an int or float if possible
 def strToFloat(df):
@@ -83,14 +84,14 @@ def calcQ(
     df: pd.DataFrame,                    # DataFrame: The input data containing scores and labels
     scoreColName: str = 'Score',         # str: The column name containing the score values
     labelColName: str = 'Label',         # str: The column name indicating whether the row is a target (1) or decoy (0 or -1)
-    isXLColName: str = 'NuXL:isXL',      # str: The column name indicating crosslinked peptides (1 for crosslinked, 0 for not)
+    classColName: str = 'NuXL:isXL',      # str: The column name indicating crosslinked peptides (1 for crosslinked, 0 for not)
     addXlQ: bool = True,                 # bool: Whether to calculate class-specific q-values for crosslinked and non-crosslinked peptides
     ascending: bool = False,             # bool: Sorting order for the score column (False for descending)
     remove_decoy: bool = False           # bool: Whether to remove decoy entries from the resulting DataFrame
 ) -> pd.DataFrame:                       # Returns a DataFrame with q-values and optionally class-specific q-values
     
     # Check if required columns are present in the DataFrame
-    if not set([scoreColName, labelColName, isXLColName]).issubset(df.columns):
+    if not set([scoreColName, labelColName]).issubset(df.columns):
         raise Exception("column missing")
 
     # Sort the DataFrame by the score column
@@ -108,9 +109,11 @@ def calcQ(
     # Optionally, calculate class-specific q-values for crosslinked (XL) and non-crosslinked peptides
     if addXlQ:
         ls = []
-        for XL in [0, 1]:
+        for curr_class in np.unique(df[classColName]):
             # Split the DataFrame based on whether the peptide is crosslinked
-            currClass = pd.DataFrame(df[df[isXLColName] == XL])
+            if not set([classColName]).issubset(df.columns):
+                raise Exception("column missing")
+            currClass = pd.DataFrame(df[df[classColName] == curr_class])
             ls.append(currClass)
             
             # Calculate class-specific FDR and q-value
