@@ -53,13 +53,13 @@ def rerank(df, group_col, score_col, new_rank_col):
 def get_top_indices(df, group_col, score_col):
     return df.groupby(group_col)[score_col].idxmax()
 
-def get_second_top_indices(df, group_col, score_col):
-    return df.sort_values(score_col, ascending=False).groupby(group_col, as_index=False).nth(1) 
-    # df.sort_values('quantity', ascending=False).groupby('customer', as_index=False).nth(1)
+#def get_second_top_indices(df, group_col, score_col):
+#    df.sort_values(score_col,ascending=False,inplace=True)
+#    g = df.groupby(group_col, as_index=False)
+#    return g.nth(-2)
 
 def get_nth_top_scan(top_scans,n, group_col, score_col):
     return top_scans.sort_values(score_col, ascending=False).groupby(group_col, as_index=False).nth(n) 
-
 
 def get_last_top_indices(df, group_col, score_col):
     return df.groupby(group_col)[score_col].idxmin()
